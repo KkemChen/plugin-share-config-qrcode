@@ -1,9 +1,9 @@
 [
   {
     "id": "plugin-share-config-qrcode",
-    "name": "分享配置到手机（QR码）",
+    "name": "扫码分享配置到手机CMFA",
     "version": "v1.0.0",
-    "description": "生成二维码将完整Mihomo配置分享到手机端CMFA，支持局域网内扫码导入。自动处理TUN、DNS引导、proxy-providers内联、rule-providers转换、GLOBAL组补全等适配。",
+    "description": "将当前选中的完整Mihomo配置生成二维码，手机端CMFA扫码即可一键导入。电脑端启动局域网临时HTTP服务，自动完成手机适配：启用TUN模式、内联proxy-providers消除重名冲突、本地rule-providers转远程HTTP、补全GLOBAL代理组确保CMFA可见、设置proxy-server-nameserver避免DNS循环依赖。支持链式代理(dialer-proxy)、自定义代理组等完整配置透传。",
     "tags": ["实用工具", "功能扩展", "提升体验"],
     "type": "Http",
     "url": "https://raw.githubusercontent.com/KkemChen/plugin-share-config-qrcode/main/plugins/GFC/plugin-share-config-qrcode.js",
