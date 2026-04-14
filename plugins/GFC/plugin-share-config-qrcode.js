@@ -26,7 +26,7 @@ const onRun = async () => {
 }
 
 const share = async (profile) => {
-  const port = Plugin.Port || '18963'
+  const port = (Plugin.Port && Plugin.Port !== 'undefined' && Plugin.Port !== '') ? Plugin.Port : '18963'
   await loadDependence()
 
   // 1. 启用 TUN（手机端必须）
