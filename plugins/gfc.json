@@ -6,7 +6,7 @@
     "description": "生成二维码将完整Mihomo配置分享到手机端CMFA，支持局域网内扫码导入。自动处理TUN、DNS引导、proxy-providers内联、rule-providers转换、GLOBAL组补全等适配。",
     "tags": ["实用工具", "功能扩展", "提升体验"],
     "type": "Http",
-    "url": "https://raw.githubusercontent.com/{OWNER}/plugin-share-config-qrcode/main/plugins/GFC/plugin-share-config-qrcode.js",
+    "url": "https://raw.githubusercontent.com/KkemChen/plugin-share-config-qrcode/main/plugins/GFC/plugin-share-config-qrcode.js",
     "path": "data/plugins/plugin-share-config-qrcode.js",
     "triggers": ["on::manual", "on::install", "on::uninstall"],
     "hasUI": false,
