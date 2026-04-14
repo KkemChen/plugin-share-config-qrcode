@@ -26,6 +26,7 @@ const onRun = async () => {
 }
 
 const share = async (profile) => {
+  const port = port || '18963'
   await loadDependence()
 
   // 1. 启用 TUN（手机端必须）
@@ -155,12 +156,12 @@ const share = async (profile) => {
 
   const urls = await Promise.all(
     ips.map((ip) => {
-      const url = `http://${ip}:${Plugin.Port}`
+      const url = `http://${ip}:${port}`
       return getQRCode(url, url)
     })
   )
 
-  const { close } = await Plugins.StartServer('0.0.0.0:' + Plugin.Port, Plugin.id, async (req, res) => {
+  const { close } = await Plugins.StartServer('0.0.0.0:' + port, Plugin.id, async (req, res) => {
     res.end(200, { 'Content-Type': 'text/yaml; charset=utf-8' }, configYaml)
   })
 
@@ -168,7 +169,7 @@ const share = async (profile) => {
     Plugin.name,
     '### 注意事项：\n\n' +
       ' - 请保证电脑和手机处于同一局域网内\n' +
-      ' - 请关闭电脑防火墙或放行端口 ' + Plugin.Port + '\n' +
+      ' - 请关闭电脑防火墙或放行端口 ' + port + '\n' +
       ' - 如果 CMFA 无法通过深度链接导入，请复制链接在 CMFA 中手动添加\n' +
       ' - 如果仍无法导入，请更换不同二维码尝试\n\n' +
       '|分享链接|二维码|\n|-|-|\n' +
