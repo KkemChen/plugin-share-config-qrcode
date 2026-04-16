@@ -1,5 +1,4 @@
-const JS_FILE = 'https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.js'
-const PATH = 'data/third/share-config-qrcode'
+import * as QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm'
 
 /* 触发器 手动触发 */
 const onRun = async () => {
@@ -27,8 +26,7 @@ const onRun = async () => {
 }
 
 const share = async (profile) => {
-  const port = (Plugin.Port && Plugin.Port !== 'undefined' && Plugin.Port !== '') ? Plugin.Port : '18963'
-  await loadDependence()
+  const port = Plugin.Port && Plugin.Port !== 'undefined' && Plugin.Port !== '' ? Plugin.Port : '18963'
 
   // 1. 条件继承 TUN：PC 端已启用则补全手机端必要字段，否则原样保留
   //    未启用 TUN 时 CMFA 通过 Android VPN Service 按钮控制流量，无需干预
@@ -60,8 +58,7 @@ const share = async (profile) => {
   const config = await Plugins.generateConfig(profile)
 
   // 4. 消除 proxy-providers：全部内联节点，展开 use 引用
-  //    展开失败时：有 URL 则降级为 http 类型保留（手机端运行时自行拉取），
-  //    无 URL 则报错要求用户先更新订阅
+  //    展开失败时：有 URL 则降级为 http 类型保留，无 URL 则报错要求先更新订阅
   const subscribesStore = Plugins.useSubscribesStore()
   if (config['proxy-providers']) {
     const existingNames = new Set((config.proxies || []).map((p) => p.name))
@@ -93,7 +90,6 @@ const share = async (profile) => {
       }
 
       if (inlined) {
-        // 展开成功：删除 provider，将 use 引用替换为内联 proxies
         delete config['proxy-providers'][id]
         for (const group of config['proxy-groups'] || []) {
           if (group.use && group.use.includes(id)) {
@@ -104,11 +100,9 @@ const share = async (profile) => {
           }
         }
       } else if (provider.url) {
-        // 展开失败但有远程 URL：降级为 http 类型，手机端运行时自行拉取
         const { path: _path, ...rest } = provider
         config['proxy-providers'][id] = { ...rest, type: 'http' }
       } else {
-        // 既无缓存又无 URL，无法恢复
         failedProviders.push(id)
       }
     }
@@ -155,7 +149,7 @@ const share = async (profile) => {
   config['external-controller'] = '127.0.0.1:9090'
   config['allow-lan'] = false
 
-  // 8. DNS 适配：
+  // 8. DNS 适配
   //    a) 只要 DNS 启用，无论是否 TUN，都必须保证 proxy-server-nameserver 存在
   //       否则 Mihomo 用 DoT/DoH 解析代理节点域名时会经过代理路由，形成死循环
   if (config.dns?.enable) {
@@ -178,8 +172,7 @@ const share = async (profile) => {
     }
   }
 
-
-  // 9. 最终校验：拒绝导出仍含 file 类型的 rule-providers（手机端无法访问本地文件）
+  // 9. 最终校验：拒绝导出仍含 file 类型的 rule-providers
   const residualFileProviders = Object.entries(config['rule-providers'] || {})
     .filter(([, rp]) => rp.type === 'file')
     .map(([name]) => name)
@@ -192,9 +185,6 @@ const share = async (profile) => {
   // 10. 获取本机局域网 IP 并启动 HTTP 服务
   const ips = await getIPAddress()
   if (ips.length === 0) throw '未找到局域网 IP 地址，请检查网络连接'
-
-  // DEBUG: 保存生成的配置供检查（调试时取消注释）
-  // await Plugins.WriteFile(PATH + '/debug-config.yaml', configYaml)
 
   const urls = await Promise.all(
     ips.map((ip) => {
@@ -217,7 +207,9 @@ const share = async (profile) => {
       Plugin.name,
       '### 注意事项：\n\n' +
         ' - 请保证电脑和手机处于同一局域网内\n' +
-        ' - 请关闭电脑防火墙或放行端口 ' + port + '\n' +
+        ' - 请关闭电脑防火墙或放行端口 ' +
+        port +
+        '\n' +
         ' - 扫描二维码后，若 CMFA 未自动导入，请复制链接手动添加\n' +
         ' - 如果仍无法导入，请更换不同二维码尝试\n\n' +
         '|分享链接|二维码|\n|-|-|\n' +
@@ -227,47 +219,6 @@ const share = async (profile) => {
   } finally {
     close()
   }
-}
-
-/* 触发器 安装 */
-const onInstall = async () => {
-  await Plugins.Download(JS_FILE, PATH + '/qrcode.min.js')
-  await Plugins.message.success('安装成功')
-  return 0
-}
-
-/* 触发器 卸载 */
-const onUninstall = async () => {
-  await Plugins.RemoveFile(PATH)
-  return 0
-}
-
-/**
- * 动态引入 QRCode 依赖，不存在时自动下载
- */
-async function loadDependence() {
-  if (window.QRCode) return
-
-  const filePath = PATH + '/qrcode.min.js'
-  let text = await Plugins.ignoredError(Plugins.ReadFile, filePath)
-
-  if (!text) {
-    const { id } = Plugins.message.info('正在下载二维码依赖...', 30000)
-    try {
-      await Plugins.Download(JS_FILE, filePath)
-      text = await Plugins.ReadFile(filePath)
-      Plugins.message.update(id, '依赖下载完成', 'success')
-      await Plugins.sleep(1000).then(() => Plugins.message.destroy(id))
-    } catch (error) {
-      Plugins.message.destroy(id)
-      throw '二维码依赖下载失败，请检查网络连接'
-    }
-  }
-
-  const script = document.createElement('script')
-  script.id = Plugin.id
-  script.text = text
-  document.body.appendChild(script)
 }
 
 /**
